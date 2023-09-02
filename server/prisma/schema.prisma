@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  surname    String
+  username   String
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  tasks   Task[]
+  Comment Comment[]
+
+  @@map("users")
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  due_date    DateTime?
+  completed   Boolean
+
+  User       User      @relation(fields: [userId], references: [id])
+  priority   Priority  @relation(fields: [priorityId], references: [id])
+  userId     String
+  priorityId String
+  comments   Comment[]
+
+  @@map("tasks")
+}
+
+model Priority {
+  id    String @id @default(uuid())
+  name  String @unique
+  tasks Task[]
+
+  @@map("priority")
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  text       String
+  created_at DateTime @default(now())
+
+  task   Task   @relation(fields: [taskId], references: [id])
+  taskId String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  @@map("comments")
+}
