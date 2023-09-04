@@ -4,9 +4,12 @@ import { Request, Response } from "express";
 import { Login } from "./auth.dto";
 import { prisma } from "../../lib/prisma/client";
 import { AppError } from "../../errors/AppError";
+import HttpStatusCodes from "../../constantes/HttpStatusCode";
+import EnvVars from "../../constantes/EnvVars";
+import { CreateUserDTO } from "../users/user.dto";
 
 export class AuthController {
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<Response> {
     const { email, password }: Login = req.body;
 
     const userAlreadyExists = await prisma.user.findUnique({
@@ -16,7 +19,7 @@ export class AuthController {
     });
 
     if (!userAlreadyExists) {
-      throw new AppError("Usuario não encontrado.", 404);
+      throw new AppError("Usuario não encontrado.", HttpStatusCodes.NOT_FOUND);
     }
 
     const isMatched = await bcrypt.compare(
@@ -25,14 +28,12 @@ export class AuthController {
     );
 
     if (!isMatched) {
-      throw new AppError("Senha inválida.", 401);
+      throw new AppError("Senha inválida.", HttpStatusCodes.UNAUTHORIZED);
     }
 
-    const token = jwt.sign(
-      { id: userAlreadyExists.id },
-      process.env.JWT_PASS ?? "",
-      { expiresIn: "24h" }
-    );
+    const token = jwt.sign({ id: userAlreadyExists.id }, EnvVars.Jwt.Secret, {
+      expiresIn: EnvVars.Jwt.Exp,
+    });
 
     const { password: _, ...user } = userAlreadyExists;
 
@@ -40,6 +41,40 @@ export class AuthController {
       user,
       token,
     });
+  }
+
+  async register(req: Request, res: Response): Promise<Response> {
+    const { firstName, lastName, email, password, username }: CreateUserDTO =
+      req.body;
+
+    const userAlreadyExists = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (userAlreadyExists) {
+      throw new AppError(
+        "O e-mail já está a ser usado por outro usuário",
+        HttpStatusCodes.CONFLICT
+      );
+    }
+
+    const passwordEncrypted = await bcrypt.hash(password, EnvVars.Bcrypt.Salt);
+
+    const userCreated = await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        username,
+        password: passwordEncrypted,
+      },
+    });
+
+    const { password: _, ...user } = userCreated;
+
+    return res.status(201).json(user);
   }
 
   async getProfile(req: Request, res: Response) {

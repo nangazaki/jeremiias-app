@@ -3,5 +3,4 @@ export interface CreateTaskDTO {
   description: string;
   due_date: Date;
   priorityId: string;
-  userId: string;
 }

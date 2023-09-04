@@ -1,5 +1,6 @@
 import { app } from "./app";
+import EnvVars from "./constantes/EnvVars"
 
-app.listen(process.env.PORT, () =>
-  console.log(`Server is running in port - ${process.env.PORT}. 😁`)
+app.listen(EnvVars.Port, () =>
+  console.log(`Server is running in port - ${EnvVars.Port}. 😁`)
 );

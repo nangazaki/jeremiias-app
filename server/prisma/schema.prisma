@@ -12,16 +12,23 @@ datasource db {
 
 model User {
   id         String   @id @default(uuid())
-  name       String
-  surname    String
+  firstName  String
+  lastName   String?
   username   String
   email      String   @unique
   password   String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  emailVerifiedAt DateTime?
+
+  isSuperAdmin Boolean @default(false)
+
   tasks   Task[]
   Comment Comment[]
+
+  teams          Team[]           @relation("TeamMembership")
+  TeamMembership TeamMembership[]
 
   @@map("users")
 }
@@ -31,7 +38,7 @@ model Task {
   title       String
   description String?
   due_date    DateTime?
-  completed   Boolean
+  completed   Boolean   @default(false)
 
   User       User      @relation(fields: [userId], references: [id])
   priority   Priority  @relation(fields: [priorityId], references: [id])
@@ -61,4 +68,32 @@ model Comment {
   userId String
 
   @@map("comments")
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  onwer_id    String
+  privacity   String
+  status      String
+
+  members        User[]           @relation("TeamMembership")
+  TeamMembership TeamMembership[]
+
+  @@map("teams")
+}
+
+model TeamMembership {
+  id      String @id @default(uuid())
+  team_id String
+  user_id String
+  role    String
+
+  team Team @relation(fields: [team_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([team_id, user_id])
 }
