@@ -40,6 +40,12 @@ model Task {
   due_date    DateTime?
   completed   Boolean   @default(false)
 
+  is_deleted             Boolean   @default(false)
+  deleted_at             DateTime?
+  deleted_permanently    Boolean   @default(false)
+  deleted_permanently_at DateTime?
+  retention_period       DateTime?
+
   User       User      @relation(fields: [userId], references: [id])
   priority   Priority  @relation(fields: [priorityId], references: [id])
   userId     String

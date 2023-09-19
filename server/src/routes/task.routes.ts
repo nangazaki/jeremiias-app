@@ -6,12 +6,11 @@ const taskRoutes = Router();
 
 taskRoutes.use(authMiddleware);
 taskRoutes.get("/", new TaskController().getUserTasks);
+taskRoutes.get("/search", new TaskController().searchByTitle);
 taskRoutes.get("/:id", new TaskController().getTaskById);
-taskRoutes.get("/search", new TaskController().filterByTitle);
-taskRoutes.get("/s", new TaskController().searchByTitle);
 taskRoutes.post("/", new TaskController().create);
-taskRoutes.post("/:id", new TaskController().UpdateStateTaskById);
-taskRoutes.put("/:id", new TaskController().editTaskById);
+taskRoutes.patch("/:id", new TaskController().UpdateStateTaskById);
+taskRoutes.patch("/:id", new TaskController().editTaskById);
 taskRoutes.delete("/:id", new TaskController().deleteTaskById);
 
 export { taskRoutes };

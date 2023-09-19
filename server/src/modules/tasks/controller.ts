@@ -11,11 +11,12 @@ export class TaskController {
 
     const taskAlreadyTaskCreated = await prisma.task.findFirst({
       where: {
-        AND: [{ title }, { userId: req.user.id }],
+        title,
+        userId: req.user.id,
       },
     });
 
-    if (!taskAlreadyTaskCreated?.completed) {
+    if (taskAlreadyTaskCreated) {
       throw new AppError(
         "O usuário já tem essa tarefa criada e incompleta!",
         HttpStatusCodes.CONFLICT
@@ -41,11 +42,7 @@ export class TaskController {
   async getUserTasks(req: Request, res: Response): Promise<Response> {
     const id = req.user.id;
 
-    const userTasks = await prisma.task.findMany({
-      where: {
-        userId: id,
-      },
-    });
+    const userTasks = await prisma.task.findMany({});
 
     return res.status(HttpStatusCodes.OK).json(userTasks);
   }
@@ -57,14 +54,16 @@ export class TaskController {
       where: { id },
     });
 
+    if (!task) {
+      throw new AppError("Tarefa não encontrada.", 404);
+    }
+
     return res.json(task);
   }
 
   async editTaskById(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
     const { title, description, due_date, priority } = req.body;
-
-    console.log(id);
 
     const taskToUpdate = await prisma.task.findUnique({
       where: { id },
@@ -112,41 +111,26 @@ export class TaskController {
     return res.status(HttpStatusCodes.OK).json();
   }
 
-  async filterByTitle(req: Request, res: Response): Promise<Response> {
-    // const { titulo } = req.query;
-
-    // console.log(titulo);
-
-    // const tasks = await prisma.task.findMany({
-    //   where: {
-    //     userId: req.user.id,
-    //   }
-    // })
-
-    // if(tasks === null) {
-    //   return res.status(HttpStatusCodes.NOT_FOUND).json([]);
-    // }
-
-    return res.status(HttpStatusCodes.NOT_FOUND).json({ message: "teste" });
-  }
-
   async searchByTitle(req: Request, res: Response): Promise<Response> {
-    // const { titulo } = req.query;
+    const { titulo } = req.query;
 
-    // console.log(titulo);
+    const title = titulo as string;
 
-    // const tasks = await prisma.task.findMany({
-    //   where: {
-    //     userId: req.user.id,
-    //   }
-    // })
+    const tasks = await prisma.task.findMany({
+      where: {
+        userId: req.user.id,
+        title: {
+          contains: title,
+        },
+      },
+    });
 
-    // if(tasks === null) {
-    //   return res.status(HttpStatusCodes.NOT_FOUND).json([]);
-    // }
+    if (tasks.length === 0) {
+      return res
+        .status(HttpStatusCodes.NOT_FOUND)
+        .json({ status: 404, message: "Nenhuma tarefa encontrada!" });
+    }
 
-    console.log(req);
-
-    return res.status(HttpStatusCodes.NOT_FOUND).json({ message: "teste" });
+    return res.status(HttpStatusCodes.OK).json(tasks);
   }
 }
