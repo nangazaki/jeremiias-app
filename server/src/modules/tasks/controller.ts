@@ -13,6 +13,7 @@ export class TaskController {
       where: {
         title,
         userId: req.user.id,
+        is_deleted: false,
       },
     });
 
