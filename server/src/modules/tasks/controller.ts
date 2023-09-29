@@ -9,7 +9,7 @@ export class TaskController {
     const { title, description, due_date, priorityId }: CreateTaskDTO =
       req.body;
 
-    const taskAlreadyTaskCreated = await prisma.task.findFirst({
+    const taskAlreadyTaskCreated = await prisma.task.findMany({
       where: {
         title,
         userId: req.user.id,
@@ -17,10 +17,15 @@ export class TaskController {
     });
 
     if (taskAlreadyTaskCreated) {
-      throw new AppError(
-        "O usuário já tem essa tarefa criada e incompleta!",
-        HttpStatusCodes.CONFLICT
-      );
+      for (let task of taskAlreadyTaskCreated) {
+        if (!task.completed) {
+          console.log(task);
+          throw new AppError(
+            "O usuário já tem essa tarefa criada e incompleta!",
+            HttpStatusCodes.CONFLICT
+          );
+        }
+      }
     }
 
     await prisma.task.create({
@@ -42,7 +47,9 @@ export class TaskController {
   async getUserTasks(req: Request, res: Response): Promise<Response> {
     const id = req.user.id;
 
-    const userTasks = await prisma.task.findMany({});
+    const userTasks = await prisma.task.findMany({
+      where: { is_deleted: false },
+    });
 
     return res.status(HttpStatusCodes.OK).json(userTasks);
   }
@@ -51,7 +58,7 @@ export class TaskController {
     const { id } = req.params;
 
     const task = await prisma.task.findUnique({
-      where: { id },
+      where: { id, is_deleted: false },
     });
 
     if (!task) {
@@ -97,15 +104,19 @@ export class TaskController {
     const { id } = req.params;
 
     const taskToUpdate = await prisma.task.findUnique({
-      where: { id, userId: req.user.id },
+      where: { id, userId: req.user.id, is_deleted: false },
     });
 
     if (!taskToUpdate) {
       throw new AppError("Tarefa não encontrada", HttpStatusCodes.NOT_FOUND);
     }
 
-    await prisma.task.delete({
+    await prisma.task.update({
       where: { id, userId: req.user.id },
+      data: {
+        is_deleted: true,
+        deleted_at: new Date(),
+      },
     });
 
     return res.status(HttpStatusCodes.OK).json();
@@ -119,6 +130,7 @@ export class TaskController {
     const tasks = await prisma.task.findMany({
       where: {
         userId: req.user.id,
+        is_deleted: false,
         title: {
           contains: title,
         },

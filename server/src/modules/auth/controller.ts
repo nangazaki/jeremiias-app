@@ -74,7 +74,7 @@ export class AuthController {
 
     const { password: _, ...user } = userCreated;
 
-    return res.status(201).json(user);
+    return res.status(HttpStatusCodes.CREATED).json(user);
   }
 
   async getProfile(req: Request, res: Response) {

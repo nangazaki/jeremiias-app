@@ -1,5 +1,11 @@
 import { Router } from "express";
+import { StatisticController } from "../modules/statistic/controller";
 
 const statisticRoutes = Router();
 
-export { statisticRoutes }
+statisticRoutes.get(
+  "/most-commom-priorities/:limit",
+  new StatisticController().mostCommomPriorities
+);
+
+export { statisticRoutes };
