@@ -87,14 +87,14 @@ module.exports = {
       },
     },
     fontFamily: {
-      sans: ['"DM Sans"', ...defaultTheme.fontFamily.sans],
+      sans: ['"Inter"', ...defaultTheme.fontFamily.sans],
       cursive: ["cursive"],
     },
   },
   variants: {},
-  // plugins: [
-  //   require("@tailwindcss/forms"),
-  //   require("@tailwindcss/typography"),
-  //   require("@tailwindcss/aspect-ratio"),
-  // ],
+  plugins: [
+    // require("@tailwindcss/forms"),
+    require("@tailwindcss/typography"),
+    // require("@tailwindcss/aspect-ratio"),
+  ],
 };
